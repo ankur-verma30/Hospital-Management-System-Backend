@@ -9,6 +9,8 @@ public interface SaleItemService {
 
     Long createSaleItem(SaleItemDTO saleItemDTO) throws HMSException;
 
+    void createSaleItems(Long saleId,List<SaleItemDTO> saleItemDTOs) throws HMSException;
+
     void createMultipleSaleItems(Long saleId,Long medicineId,List<SaleItemDTO> saleItemDTOs) throws HMSException;
 
     void updateSaleItem(SaleItemDTO saleItemDTO) throws HMSException;

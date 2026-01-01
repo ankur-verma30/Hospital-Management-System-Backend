@@ -15,11 +15,11 @@ public interface MedicineInventoryService{
 
     MedicineInventoryDTO updateMedicine(MedicineInventoryDTO medicineInventoryDTO) throws HMSException;
 
+     String sellStock(Long medicineId,Long quantity) throws HMSException;
+
     void deleteMedicine(Long id) throws HMSException;
 
     public void deleteExpiredMedicine() throws HMSException;
-
-
 
 
 }

@@ -23,6 +23,14 @@ public class SaleItemServiceImpl implements SaleItemService{
     }
 
     @Override
+    public void createSaleItems(Long saleId, List<SaleItemDTO> saleItemDTOs) throws HMSException {
+    saleItemDTOs.stream().map(x->{
+        x.setSaleId(saleId);
+        return x.toEntity();
+    }).forEach(saleItemRepository::save);
+    }
+
+    @Override
     public void createMultipleSaleItems(Long saleId, Long medicineId, List<SaleItemDTO> saleItemDTOs) throws HMSException {
     saleItemDTOs.stream().map((x) ->{
         x.setSaleId(saleId);

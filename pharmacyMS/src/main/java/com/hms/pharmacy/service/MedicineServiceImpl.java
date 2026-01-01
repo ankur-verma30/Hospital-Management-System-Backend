@@ -77,9 +77,8 @@ public class MedicineServiceImpl implements MedicineService{
     @Override
     public Integer removeStock(Long id, Integer quantity) throws HMSException {
         Medicine medicine = medicineRepository.findById(id).orElseThrow(() -> new HMSException("MEDICINE_NOT_FOUND"));
-        if(medicine.getStock()==null) throw new HMSException("NOT_ENOUGH_STOCK");
-        if(medicine.getStock()<quantity) throw new HMSException("NOT_ENOUGH_STOCK");
-        medicine.setStock(medicine.getStock() - quantity);
+        medicine.setStock(medicine.getStock()!=null ? medicine.getStock()-quantity : 0);
+
         medicineRepository.save(medicine);
         return medicine.getStock();
     }

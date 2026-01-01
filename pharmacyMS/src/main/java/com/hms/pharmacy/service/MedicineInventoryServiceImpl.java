@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class MedicineInventoryServiceImpl implements MedicineInventoryService{
+public class MedicineInventoryServiceImpl implements MedicineInventoryService {
 
     private final MedicineInventoryRepository medicineInventoryRepository;
 
@@ -57,13 +57,12 @@ public class MedicineInventoryServiceImpl implements MedicineInventoryService{
 
         existingMedicineInventory.setBatchNo(medicineInventoryDTO.getBatchNo());
 
-        if(existingMedicineInventory.getInitialQuantity()<medicineInventoryDTO.getQuantity()){
+        if (existingMedicineInventory.getInitialQuantity() < medicineInventoryDTO.getQuantity()) {
             medicineService.addStock(medicineInventoryDTO.getMedicineId(),
-                    medicineInventoryDTO.getQuantity()-existingMedicineInventory.getInitialQuantity());
-        }
-        else if(existingMedicineInventory.getInitialQuantity()>medicineInventoryDTO.getQuantity()){
+                    medicineInventoryDTO.getQuantity() - existingMedicineInventory.getInitialQuantity());
+        } else if (existingMedicineInventory.getInitialQuantity() > medicineInventoryDTO.getQuantity()) {
             medicineService.removeStock(medicineInventoryDTO.getMedicineId(),
-                    existingMedicineInventory.getInitialQuantity()-medicineInventoryDTO.getQuantity());
+                    existingMedicineInventory.getInitialQuantity() - medicineInventoryDTO.getQuantity());
         }
 
         existingMedicineInventory.setQuantity(medicineInventoryDTO.getQuantity());
@@ -75,12 +74,42 @@ public class MedicineInventoryServiceImpl implements MedicineInventoryService{
     }
 
     @Override
+    @Transactional
+    public String sellStock(Long medicineId, Long quantity) throws HMSException {
+        List<MedicineInventory> medicineInventories =
+                medicineInventoryRepository.findByMedicineIdAndExpiryDateAfterAndQuantityGreaterThanAndStatusOrderByExpiryDateAsc(medicineId, LocalDate.now(), 0, StockStatus.ACTIVE);
+        if (medicineInventories.isEmpty()) throw new HMSException("OUT_OF_STOCK");
+        StringBuilder batchDetails = new StringBuilder();
+        Long remainingQuantity = quantity;
+        for (MedicineInventory inventory : medicineInventories) {
+            if (remainingQuantity <= 0) break;
+
+            int availableQuantity = inventory.getQuantity();
+            if (availableQuantity <= remainingQuantity) {
+                batchDetails.append(String.format("Batch %s: %d units\n", inventory.getBatchNo(), availableQuantity));
+                remainingQuantity -= availableQuantity;
+                inventory.setQuantity(0);
+                inventory.setStatus(StockStatus.EXPIRED);
+
+            } else {
+                batchDetails.append(String.format("Batch %s: %d units\n", inventory.getBatchNo(), remainingQuantity));
+                inventory.setQuantity(availableQuantity - remainingQuantity.intValue());
+                remainingQuantity = 0L;
+            }
+        }
+        if (remainingQuantity > 0) throw new HMSException("INSUFFICIENT_STOCK");
+        medicineService.removeStock(medicineId, quantity.intValue());
+        medicineInventoryRepository.saveAll(medicineInventories);
+        return batchDetails.toString();
+    }
+
+    @Override
     public void deleteMedicine(Long id) throws HMSException {
         medicineInventoryRepository.deleteById(id);
     }
 
-    private void markExpiredStatus(List<MedicineInventory> medicineInventories ) throws HMSException {
-        for(MedicineInventory medicine:medicineInventories){
+    private void markExpiredStatus(List<MedicineInventory> medicineInventories) throws HMSException {
+        for (MedicineInventory medicine : medicineInventories) {
             medicine.setStatus(StockStatus.EXPIRED);
         }
         medicineInventoryRepository.saveAll(medicineInventories);
@@ -90,16 +119,14 @@ public class MedicineInventoryServiceImpl implements MedicineInventoryService{
     @Scheduled(cron = "0 41 17 * * ?") // 17:31:00
     public void deleteExpiredMedicine() throws HMSException {
         List<MedicineInventory> expiredMedicine = medicineInventoryRepository.findByExpiryDateBefore(LocalDate.now());
-        for(MedicineInventory medicine:expiredMedicine){
-            medicineService.removeStock(medicine.getMedicine().getId(),medicine.getQuantity());
+        for (MedicineInventory medicine : expiredMedicine) {
+            medicineService.removeStock(medicine.getMedicine().getId(), medicine.getQuantity());
         }
 
         this.markExpiredStatus(expiredMedicine);
     }
 
 
-
-
     // 0 30 14 * * ?"
- // seconds minutes hours dayofMonth month dayofWeek
+    // seconds minutes hours dayofMonth month dayofWeek
 }

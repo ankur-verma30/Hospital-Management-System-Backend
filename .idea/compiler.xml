@@ -20,17 +20,7 @@
         <module name="Eureka-server" />
         <module name="gatewayMS" />
       </profile>
-      <profile name="Annotation profile for appointmentMS" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-        </processorPath>
-        <module name="appointmentMS" />
-      </profile>
-      <profile name="Annotation profile for media" enabled="true">
+      <profile name="Annotation profile for pharmacyMS" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -38,6 +28,7 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
         <module name="pharmacyMS" />
+        <module name="appointmentMS" />
         <module name="media" />
       </profile>
     </annotationProcessing>
